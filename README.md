@@ -96,6 +96,10 @@ Add to `%APPDATA%\Claude\claude_desktop_config.json`:
 }
 ```
 
+### Cursor / Windsurf / Other
+
+Use the same format as Claude Desktop. Point `command` to `node` and `args` to the path to `index.mjs`.
+
 ## Environment variables
 
 | Variable | Required | Description |
@@ -133,6 +137,10 @@ Add to `%APPDATA%\Claude\claude_desktop_config.json`:
 ## Pricing
 
 Firefly API uses generative credits. Pricing varies by plan and volume. See [Adobe Firefly pricing](https://www.adobe.com/products/firefly/pricing.html) for details.
+
+## Claude skill
+
+A companion Claude skill for Firefly is available in the [claude-skills](https://github.com/thenavidm/claude-skills) repo under `tools/firefly/`. It teaches Claude how to use the Firefly API effectively, including image generation, fill/expand workflows, and parameter selection.
 
 ## License
 
