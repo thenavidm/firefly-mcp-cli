@@ -1,0 +1,28 @@
+{
+  "name": "firefly-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for the Adobe Firefly API — text-to-image, generative fill, expand, object composite, and more",
+  "type": "module",
+  "main": "index.mjs",
+  "scripts": {
+    "start": "node index.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.1"
+  },
+  "license": "AGPL-3.0",
+  "author": "Navid Moazzez (https://navid.me)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thenavidm/firefly-mcp.git"
+  },
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "adobe",
+    "firefly",
+    "image-generation",
+    "generative-ai",
+    "claude"
+  ]
+}
