@@ -1,7 +1,7 @@
 {
   "name": "@thenavidm/firefly-mcp-cli",
   "version": "2.0.0",
-  "description": "Adobe Firefly MCP server, CLI and desktop extension for image generation, Image 5 editing, video, composites, upscaling and custom models.",
+  "description": "Adobe Firefly MCP server and CLI for Claude Code, Codex and AI agents. 14 tools for Image 5 generation and editing, video, generative fill, expansion, composites, upscaling, reference uploads, jobs and custom models.",
   "type": "module",
   "main": "./dist/index.js",
   "bin": {
@@ -27,15 +27,16 @@
     "ajv-formats": "^3.0.1"
   },
   "devDependencies": {
+    "@anthropic-ai/mcpb": "2.1.2",
+    "@apidevtools/json-schema-ref-parser": "^16.0.3",
     "@types/node": "^22.10.0",
-    "typescript": "^5.7.0",
-    "vitest": "^2.1.0",
-    "@apidevtools/json-schema-ref-parser": "^14.0.0",
-    "@anthropic-ai/mcpb": "2.1.2"
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
   },
   "license": "AGPL-3.0-or-later",
   "author": "Navid Moazzez (https://navid.me)",
-  "homepage": "https://github.com/thenavidm/firefly-mcp-cli",
+  "homepage": "https://navid.me/mcp-servers/firefly",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/thenavidm/firefly-mcp-cli.git"
@@ -50,18 +51,47 @@
     "SKILL.md",
     "LICENSE",
     "THIRD_PARTY_NOTICES.md",
-    "licenses"
+    "licenses",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "COMPARISON.md"
   ],
   "keywords": [
-    "adobe",
-    "firefly",
     "mcp",
     "mcp-server",
+    "model-context-protocol",
     "cli",
+    "command-line-tool",
+    "adobe-firefly",
+    "firefly-api",
     "image-generation",
+    "image-editing",
     "video-generation",
-    "claude",
+    "generative-fill",
+    "compositing",
+    "upscaling",
+    "claude-code",
+    "claude-desktop",
     "codex",
-    "ai-agents"
-  ]
+    "cursor",
+    "ai-agents",
+    "typescript",
+    "desktop-extension",
+    "adobe",
+    "firefly",
+    "generative-expand",
+    "product-photography",
+    "image-model-5",
+    "gemini-cli",
+    "windsurf",
+    "open-source",
+    "json-schema",
+    "ai-tools"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "overrides": {
+    "tmp": "^0.2.7"
+  }
 }

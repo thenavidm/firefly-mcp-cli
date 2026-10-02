@@ -304,6 +304,7 @@
           "description": "Firefly will create similar variations. Use a URL or an uploadID as the source for the image. Firefly only allows these listed domains: amazonaws.com windows.net dropboxusercontent.com storage.googleapis.com .",
           "properties": {
             "source": {
+              "description": "Source image that Firefly expands, fills, uses to generate similar images, or upscales.",
               "properties": {
                 "uploadId": {
                   "description": "The `uploadId` from the storage API response.",
@@ -318,8 +319,7 @@
                   "type": "string"
                 }
               },
-              "type": "object",
-              "description": "Source image that Firefly expands, fills, uses to generate similar images, or upscales."
+              "type": "object"
             }
           },
           "required": [
@@ -404,6 +404,7 @@
               "description": "This is a deprecated property. Use mask instead."
             },
             "source": {
+              "description": "Source image that Firefly expands, fills, or uses to generate similar images.",
               "properties": {
                 "uploadId": {
                   "description": "The `uploadId` from the storage API response.",
@@ -418,8 +419,7 @@
                   "type": "string"
                 }
               },
-              "type": "object",
-              "description": "Source image that Firefly expands, fills, or uses to generate similar images."
+              "type": "object"
             }
           },
           "required": [
@@ -592,6 +592,7 @@
               "description": "This is a deprecated property. Use mask instead."
             },
             "source": {
+              "description": "Source image that Firefly expands, fills, or uses to generate similar images.",
               "properties": {
                 "uploadId": {
                   "description": "The `uploadId` from the storage API response.",
@@ -606,8 +607,7 @@
                   "type": "string"
                 }
               },
-              "type": "object",
-              "description": "Source image that Firefly expands, fills, or uses to generate similar images."
+              "type": "object"
             }
           },
           "required": [
@@ -746,6 +746,7 @@
               "description": "This is a deprecated property. Use mask instead."
             },
             "source": {
+              "description": "Source image that Firefly expands, fills, or uses to generate similar images.",
               "properties": {
                 "uploadId": {
                   "description": "The `uploadId` from the storage API response.",
@@ -760,8 +761,7 @@
                   "type": "string"
                 }
               },
-              "type": "object",
-              "description": "Source image that Firefly expands, fills, or uses to generate similar images."
+              "type": "object"
             }
           },
           "required": [
@@ -773,6 +773,7 @@
           "description": "Selected areas of a background image that Firefly uses to fill the source image.",
           "properties": {
             "source": {
+              "description": "Original mask image.",
               "properties": {
                 "uploadId": {
                   "description": "The `uploadId` from the storage API response.",
@@ -787,8 +788,7 @@
                   "type": "string"
                 }
               },
-              "type": "object",
-              "description": "Original mask image."
+              "type": "object"
             }
           },
           "type": "object"
@@ -979,7 +979,7 @@
                     "url": {
                       "type": "string",
                       "format": "uri",
-                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://github.com/your-repo/your-project/blob/main/src/pages/getting-started/usage-notes/index.md#allowed-storage-domains) for the current list."
+                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://developer.adobe.com/firefly-services/docs/firefly-api/getting-started/usage-notes/) for the current list."
                     }
                   },
                   "description": "The image source. Exactly one of `url` or `uploadId` must be provided in the request."
@@ -1004,7 +1004,7 @@
                     "url": {
                       "type": "string",
                       "format": "uri",
-                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://github.com/your-repo/your-project/blob/main/src/pages/getting-started/usage-notes/index.md#allowed-storage-domains) for the current list."
+                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://developer.adobe.com/firefly-services/docs/firefly-api/getting-started/usage-notes/) for the current list."
                     }
                   },
                   "description": "The image source. Exactly one of `url` or `uploadId` must be provided in the request."
@@ -1038,7 +1038,7 @@
                     "url": {
                       "type": "string",
                       "format": "uri",
-                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://github.com/your-repo/your-project/blob/main/src/pages/getting-started/usage-notes/index.md#allowed-storage-domains) for the current list."
+                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://developer.adobe.com/firefly-services/docs/firefly-api/getting-started/usage-notes/) for the current list."
                     }
                   },
                   "description": "The image source. Exactly one of `url` or `uploadId` must be provided in the request."
@@ -1131,7 +1131,7 @@
                     "url": {
                       "type": "string",
                       "format": "uri",
-                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://github.com/your-repo/your-project/blob/main/src/pages/getting-started/usage-notes/index.md#allowed-storage-domains) for the current list."
+                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://developer.adobe.com/firefly-services/docs/firefly-api/getting-started/usage-notes/) for the current list."
                     }
                   },
                   "description": "The image source. Exactly one of `url` or `uploadId` must be provided in the request."
@@ -1156,7 +1156,7 @@
                     "url": {
                       "type": "string",
                       "format": "uri",
-                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://github.com/your-repo/your-project/blob/main/src/pages/getting-started/usage-notes/index.md#allowed-storage-domains) for the current list."
+                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://developer.adobe.com/firefly-services/docs/firefly-api/getting-started/usage-notes/) for the current list."
                     }
                   },
                   "description": "The image source. Exactly one of `url` or `uploadId` must be provided in the request."
@@ -1190,7 +1190,7 @@
                     "url": {
                       "type": "string",
                       "format": "uri",
-                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://github.com/your-repo/your-project/blob/main/src/pages/getting-started/usage-notes/index.md#allowed-storage-domains) for the current list."
+                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://developer.adobe.com/firefly-services/docs/firefly-api/getting-started/usage-notes/) for the current list."
                     }
                   },
                   "description": "The image source. Exactly one of `url` or `uploadId` must be provided in the request."
@@ -1215,7 +1215,7 @@
                     "url": {
                       "type": "string",
                       "format": "uri",
-                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://github.com/your-repo/your-project/blob/main/src/pages/getting-started/usage-notes/index.md#allowed-storage-domains) for the current list."
+                      "description": "Pre-signed URL of the image from a supported domain. [See Allowed storage domains](https://developer.adobe.com/firefly-services/docs/firefly-api/getting-started/usage-notes/) for the current list."
                     }
                   },
                   "description": "The image source. Exactly one of `url` or `uploadId` must be provided in the request."
@@ -1300,6 +1300,7 @@
           "description": "The input image for the upsampler (source uploadId or url).",
           "properties": {
             "source": {
+              "description": "Source image that Firefly expands, fills, uses to generate similar images, or upscales.",
               "properties": {
                 "uploadId": {
                   "description": "The `uploadId` from the storage API response.",
@@ -1314,8 +1315,7 @@
                   "type": "string"
                 }
               },
-              "type": "object",
-              "description": "Source image that Firefly expands, fills, uses to generate similar images, or upscales."
+              "type": "object"
             }
           },
           "required": [
@@ -1385,6 +1385,7 @@
                     "type": "object"
                   },
                   "source": {
+                    "description": "The source details of the image.",
                     "properties": {
                       "uploadId": {
                         "description": "The `uploadId` from the storage API response.",
@@ -1399,8 +1400,7 @@
                         "type": "string"
                       }
                     },
-                    "type": "object",
-                    "description": "The source details of the image."
+                    "type": "object"
                   }
                 },
                 "required": [

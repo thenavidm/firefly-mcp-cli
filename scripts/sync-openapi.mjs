@@ -15,7 +15,7 @@ function clean(s) {
     if (["example","examples","title","xml","externalDocs","discriminator","deprecated"].includes(k)) continue;
     out[k] = clean(v);
   }
-  if (out.description) out.description = out.description.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").replace(/—/g, ":");
+  if (out.description) out.description = out.description.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").replace(/—/g, ":").replace(/https:\/\/github\.com\/your-repo\/your-project\/blob\/main\/src\/pages\/getting-started\/usage-notes\/index\.md#allowed-storage-domains/g, "https://developer.adobe.com/firefly-services/docs/firefly-api/getting-started/usage-notes/");
   if (typeof out.exclusiveMinimum === "boolean") { if (out.exclusiveMinimum) out.exclusiveMinimum = out.minimum; else delete out.exclusiveMinimum; }
   if (out.allOf?.length === 1) { const {allOf,...rest}=out; return {...allOf[0],...rest}; }
   return out;

@@ -163,3 +163,21 @@ describe("paid requests, file downloads and hidden write auditing",()=>{
   try {const result=await c.client.callTool({name:"generate_image",arguments:{prompt:"private idea"}});expect(result.isError).toBe(true);const log=await readFile(audit,"utf8");expect(log).toContain("blocked: read-only");expect(log).not.toContain("private idea");expect(f).not.toHaveBeenCalled();}finally{await c.close();}
  });
 });
+
+describe("setup checks",()=>{
+ it("validates a supplied token with a real API read rather than only its presence",async()=>{
+  const f=vi.fn().mockResolvedValue(json({custom_models:[]}));
+  const result=await new FireflyClient(config(),f).verifyCredentials();
+  expect(f).toHaveBeenCalledTimes(1);expect(String(f.mock.calls[0]?.[0])).toContain("/v3/custom-models?start=0&limit=1");expect(result.validation).toBe("Custom-model API read");expect(result.entitlementChecked).toBe(false);
+ });
+ it("refuses an invalid supplied token",async()=>{
+  const f=vi.fn().mockResolvedValue(json({error:"invalid token"},401));
+  await expect(new FireflyClient(config(),f).verifyCredentials()).rejects.toThrow(/401/);
+ });
+ it("does not leak an OAuth request body through a network exception",async()=>{
+  const cfg=loadConfig({FIREFLY_CLIENT_ID:"private-id",FIREFLY_CLIENT_SECRET:"private-secret"});
+  const f=vi.fn().mockRejectedValue(new Error("private-secret private-id"));
+  await expect(new FireflyClient(cfg,f).verifyCredentials()).rejects.toThrow("OAuth request failed");
+  try{await new FireflyClient(cfg,f).verifyCredentials();}catch(e){expect((e as Error).message).not.toContain("private-secret");}
+ });
+});

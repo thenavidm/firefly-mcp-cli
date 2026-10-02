@@ -12,7 +12,7 @@ export class FireflyClient {
  private authenticating?: Promise<string>;
  constructor(private readonly config: Config, private readonly fetcher: typeof fetch = fetch) {}
  private redact(text: string): string {
-  for (const value of [this.config.clientSecret,this.config.accessToken,this.config.userToken,this.token]) if (value) text=text.split(value).join("[redacted]");
+  for (const value of [this.config.clientId,this.config.clientSecret,this.config.accessToken,this.config.userToken,this.token].sort((a,b)=>b.length-a.length)) if (value) text=text.split(value).join("[redacted]");
   return text;
  }
  private async json(response: Response, auth = false): Promise<Json> {
@@ -32,7 +32,7 @@ export class FireflyClient {
   if (this.token && Date.now()<this.expiresAt-60000) return this.token;
   if (this.authenticating) return this.authenticating;
   this.authenticating=(async()=>{
-   const response=await this.fetcher(AUTH,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"client_credentials",client_id:this.config.clientId,client_secret:this.config.clientSecret,scope:this.config.scopes}),signal:AbortSignal.timeout(this.config.timeoutMs),redirect:"error"});
+   const response=await this.fetcher(AUTH,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:new URLSearchParams({grant_type:"client_credentials",client_id:this.config.clientId,client_secret:this.config.clientSecret,scope:this.config.scopes}),signal:AbortSignal.timeout(this.config.timeoutMs),redirect:"error"}).catch(()=>{throw new FireflyError("OAuth request failed. Check connectivity to Adobe IMS before trying again.",408);});
    const data=await this.json(response,true);
    if (typeof data.access_token!=="string" || !data.access_token) throw new FireflyError("Authentication response did not contain an access token.",401);
    this.token=data.access_token; this.expiresAt=Date.now()+Number(data.expires_in ?? 3600)*1000;
@@ -40,7 +40,11 @@ export class FireflyClient {
   })();
   try { return await this.authenticating; } finally {this.authenticating=undefined;}
  }
- async verifyCredentials(): Promise<Json> { await this.getAccessToken(); return {ok:true,authenticated:true,entitlementChecked:false,note:"Authentication succeeded. API entitlement is checked on each operation."}; }
+ async verifyCredentials(): Promise<Json> {
+  await this.getAccessToken();
+  if (this.config.accessToken) await this.customModels({start:0,limit:1});
+  return {ok:true,authenticated:true,entitlementChecked:false,validation:this.config.accessToken?"Custom-model API read":"OAuth token exchange",note:"Authentication succeeded. This check does not prove generation entitlement or spend generation credits."};
+ }
  private trustedUrl(pathOrUrl: string): URL {
   const url=new URL(pathOrUrl,BASE);
   if (url.origin!==BASE || url.username || url.password || url.hash) throw new UsageError("Job URLs must use https://firefly-api.adobe.io with no embedded credentials.");

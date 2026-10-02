@@ -20,10 +20,13 @@
   "keywords": [
     "adobe",
     "firefly",
+    "image-model-5",
     "images",
     "video",
+    "composites",
     "mcp",
-    "cli"
+    "cli",
+    "claude-desktop"
   ],
   "server": {
     "type": "node",

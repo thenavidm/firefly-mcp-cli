@@ -10,4 +10,6 @@ Never auto-retry paid generation POSTs. Polling and reads may retry 429; a timed
 
 Do not print credentials or persist access tokens. Read-only hides all generation and upload tools. Keep the existing license. Do not claim a live API run, npm release, desktop install or token measurement from passing mocked tests.
 
-Commit as Navid Moazzez <n@navid.me>. Run build, typecheck, tests, check:counts and build:mcpb before a release.
+Use the configured maintainer commit identity. Run build, typecheck, tests, check:counts and build:mcpb before a release.
+
+README, INSTALL, SKILL and CHANGELOG must follow the complete current Bluesky/Substack structure. Preserve factual accuracy rather than copying their stale package names or counts. Keep logo, badges, terminal scene, topics, author block, dependencies, upgrade/removal, full tools/arguments and release links current.
