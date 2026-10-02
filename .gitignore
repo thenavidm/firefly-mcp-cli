@@ -1,3 +1,9 @@
 node_modules/
+dist/
 .env
-package-lock.json
+.env.*
+!.env.example
+coverage/
+desktop-extension/build*/
+desktop-extension/*.mcpb
+*.tgz
