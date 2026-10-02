@@ -1,28 +1,97 @@
 {
-  "name": "firefly-mcp",
-  "version": "1.0.0",
-  "description": "MCP server for the Adobe Firefly API — text-to-image, generative fill, expand, object composite, and more",
+  "name": "@thenavidm/firefly-mcp-cli",
+  "version": "2.0.0",
+  "description": "Adobe Firefly MCP server and CLI for Claude Code, Codex and AI agents. 14 tools for Image 5 generation and editing, video, generative fill, expansion, composites, upscaling, reference uploads, jobs and custom models.",
   "type": "module",
-  "main": "index.mjs",
+  "main": "./dist/index.js",
+  "bin": {
+    "firefly-mcp": "dist/index.js",
+    "firefly-cli": "dist/index.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "start": "node index.mjs"
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build",
+    "build:mcpb": "bash desktop-extension/build.sh",
+    "check:counts": "node scripts/check-counts.mjs",
+    "sync:api": "node scripts/sync-openapi.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.12.1"
+    "@modelcontextprotocol/sdk": "^1.31.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1"
   },
-  "license": "AGPL-3.0",
+  "devDependencies": {
+    "@anthropic-ai/mcpb": "2.1.2",
+    "@apidevtools/json-schema-ref-parser": "^16.0.3",
+    "@types/node": "^22.10.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.2",
+    "vitest": "^5.0.3"
+  },
+  "license": "AGPL-3.0-or-later",
   "author": "Navid Moazzez (https://navid.me)",
+  "homepage": "https://navid.me/mcp-servers/firefly",
   "repository": {
     "type": "git",
-    "url": "https://github.com/thenavidm/firefly-mcp.git"
+    "url": "git+https://github.com/thenavidm/firefly-mcp-cli.git"
   },
+  "bugs": {
+    "url": "https://github.com/thenavidm/firefly-mcp-cli/issues"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "INSTALL.md",
+    "SKILL.md",
+    "LICENSE",
+    "THIRD_PARTY_NOTICES.md",
+    "licenses",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "COMPARISON.md"
+  ],
   "keywords": [
     "mcp",
     "mcp-server",
+    "model-context-protocol",
+    "cli",
+    "command-line-tool",
+    "adobe-firefly",
+    "firefly-api",
+    "image-generation",
+    "image-editing",
+    "video-generation",
+    "generative-fill",
+    "compositing",
+    "upscaling",
+    "claude-code",
+    "claude-desktop",
+    "codex",
+    "cursor",
+    "ai-agents",
+    "typescript",
+    "desktop-extension",
     "adobe",
     "firefly",
-    "image-generation",
-    "generative-ai",
-    "claude"
-  ]
+    "generative-expand",
+    "product-photography",
+    "image-model-5",
+    "gemini-cli",
+    "windsurf",
+    "open-source",
+    "json-schema",
+    "ai-tools"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "overrides": {
+    "tmp": "^0.2.7"
+  }
 }

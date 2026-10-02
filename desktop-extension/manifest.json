@@ -1,0 +1,85 @@
+{
+  "manifest_version": "0.2",
+  "name": "firefly",
+  "display_name": "Adobe Firefly",
+  "version": "2.0.0",
+  "description": "Adobe Firefly MCP server with 14 tools for images, Image 5 edits, video, upscaling, composites and custom models.",
+  "long_description": "Requires Adobe Firefly Services API access with OAuth Server-to-Server credentials. Generation consumes Adobe credits. Credentials are supplied locally, never bundled. The same tools are available through firefly-cli. Read-only hides generation and uploads.",
+  "author": {
+    "name": "Navid Moazzez",
+    "url": "https://navid.me"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thenavidm/firefly-mcp-cli"
+  },
+  "homepage": "https://github.com/thenavidm/firefly-mcp-cli",
+  "documentation": "https://github.com/thenavidm/firefly-mcp-cli/blob/main/INSTALL.md",
+  "support": "https://github.com/thenavidm/firefly-mcp-cli/issues",
+  "license": "AGPL-3.0-or-later",
+  "keywords": [
+    "adobe",
+    "firefly",
+    "image-model-5",
+    "images",
+    "video",
+    "composites",
+    "mcp",
+    "cli",
+    "claude-desktop"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/index.js"
+      ],
+      "env": {
+        "FIREFLY_CLIENT_ID": "${user_config.client_id}",
+        "FIREFLY_CLIENT_SECRET": "${user_config.client_secret}",
+        "FIREFLY_OUTPUT_DIR": "${user_config.output_dir}",
+        "FIREFLY_READ_ONLY": "${user_config.read_only}"
+      }
+    }
+  },
+  "user_config": {
+    "client_id": {
+      "type": "string",
+      "title": "Firefly Services client ID",
+      "description": "OAuth Server-to-Server client ID from your Adobe Developer Console project.",
+      "required": true
+    },
+    "client_secret": {
+      "type": "string",
+      "title": "Firefly Services client secret",
+      "description": "OAuth Server-to-Server client secret. Never your Adobe account password.",
+      "sensitive": true,
+      "required": true
+    },
+    "output_dir": {
+      "type": "string",
+      "title": "Optional output folder",
+      "description": "Folder on this computer used when download=true. Leave empty for ~/outputs/images.",
+      "required": false
+    },
+    "read_only": {
+      "type": "boolean",
+      "title": "Read only",
+      "description": "Hide generation and upload tools. Existing jobs and custom models can still be read.",
+      "default": false,
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=22"
+    }
+  }
+}
