@@ -829,7 +829,7 @@ Keep the old tool names where supported, but change the package to `@thenavidm/f
 
 ~~~bash
 npm uninstall -g @thenavidm/firefly-mcp-cli
-claude mcp remove firefly
+claude mcp remove --scope user firefly
 ~~~
 
 In other clients, remove the Firefly entry you added. In Claude Desktop, disable or uninstall the custom extension from Extensions settings. Remove private credential settings and revoke/rotate Adobe credentials if they are no longer needed.
@@ -1018,6 +1018,8 @@ Run into a problem or have a question? [Open an issue](https://github.com/thenav
 
 Found a security vulnerability? [Report it privately](https://github.com/thenavidm/firefly-mcp-cli/security/advisories/new). [SECURITY.md](SECURITY.md) explains the credential and spending boundaries.
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution policy.
+
 ## About the author
 
 Navid Moazzez is a leading AI business strategist, and the host of the AI Creator Summit, watched by 100,000+ creators. He helps creators and founders master AI and build their own AI Operating System (AI OS) to automate their business and life. This Adobe Firefly MCP server and CLI is one piece of that system.
@@ -1053,4 +1055,4 @@ Not affiliated with, endorsed by or connected to Adobe Inc.
 
 ---
 
-© 2026 [NM Media](https://navid.media?utm_source=github&utm_medium=referral&utm_campaign=firefly-mcp-cli&utm_content=readme). Made with ❤️ by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=firefly-mcp-cli&utm_content=readme).
+© 2026 [Navid Media](https://navid.media?utm_source=github&utm_medium=referral&utm_campaign=firefly-mcp-cli&utm_content=readme). Made with ❤️ by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=firefly-mcp-cli&utm_content=readme).
