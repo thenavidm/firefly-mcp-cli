@@ -15,7 +15,7 @@ One package gives you two ways in: `firefly-mcp` connects the tools to your AI a
 
 Built and maintained by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=firefly-mcp-cli&utm_content=readme). The complete setup guide is on [navid.me](https://navid.me/mcp-servers/firefly?utm_source=github&utm_medium=referral&utm_campaign=firefly-mcp-cli&utm_content=guide).
 
-<img src="https://cdn.navid.me/repos/firefly-mcp-cli.gif" alt="Illustrated Firefly workflow in the same terminal component used on navid.me" width="520">
+<img src="https://cdn.navid.me/repos/firefly-mcp-cli-retina.gif" alt="Illustrated Firefly workflow in the same terminal component used on navid.me" width="520">
 
 The terminal illustrates shipped tool names and the confirmation flow. It is a presentation preview, not a recording of a paid Adobe job.
 

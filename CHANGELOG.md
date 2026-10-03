@@ -1,5 +1,9 @@
 # Adobe Firefly MCP Server & CLI changelog
 
+## Unreleased
+
+Use the native terminal capture at 1040 source pixels with lossless GIF optimization, displayed at 520 pixels, matching the Bluesky/Substack reference. Original assets remain available.
+
 | Component | Version | Last updated |
 | --- | --- | --- |
 | firefly-mcp-cli | 2.0.0 | 2026-10-02 |
