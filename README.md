@@ -1022,7 +1022,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution policy.
 
 ## About the author
 
-Navid Moazzez is a leading AI business strategist, and the host of the AI Creator Summit, watched by 100,000+ creators. He helps creators and founders master AI and build their own AI Operating System (AI OS) to automate their business and life. This Adobe Firefly MCP server and CLI is one piece of that system.
+Navid Moazzez is a leading AI business strategist, and the host of the AI Creator Summit, watched by 100,000+ creators. He helps creators and founders master AI and build their own AI Operating System (AI OS) to automate their business and life. He creates useful free tools, MCP servers and CLIs that creators and founders can use in their own workflows.
 
 **Links**
 
