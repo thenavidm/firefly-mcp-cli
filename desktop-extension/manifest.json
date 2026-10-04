@@ -2,7 +2,7 @@
   "manifest_version": "0.2",
   "name": "firefly",
   "display_name": "Adobe Firefly",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Adobe Firefly MCP server with 14 tools for images, Image 5 edits, video, upscaling, composites and custom models.",
   "long_description": "Requires Adobe Firefly Services API access with OAuth Server-to-Server credentials. Generation consumes Adobe credits. Credentials are supplied locally, never bundled. The same tools are available through firefly-cli. Read-only hides generation and uploads.",
   "author": {
