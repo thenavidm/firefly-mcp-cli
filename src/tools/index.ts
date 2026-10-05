@@ -4,7 +4,8 @@ import addFormats from "ajv-formats";
 import { FireflyClient, type Json } from "../api/client.js";
 import { UsageError } from "../api/errors.js";
 import type { Config } from "../config.js";
-import type { Risk } from "../safety.js";
+/** Firefly's own levels: a generation spends credits, which Slipway calls a write that spends. */
+export type Risk = "read" | "write" | "spend" | "destructive";
 export type Operation = {name:string;path:string;title:string;description:string;bodySchema:Json;headers:Record<string,string>};
 const operations=operationsData as unknown as Operation[];
 const ajv=new Ajv({allErrors:true,strict:false});
@@ -12,6 +13,8 @@ const ajv=new Ajv({allErrors:true,strict:false});
 ajv.addFormat("uuid4",/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i);
 const positive={type:"integer",minimum:1,maximum:4096};
 export type ToolSpec = {name:string;title:string;description:string;inputSchema:Json;risk:Risk;handler:(args:Json,client:FireflyClient)=>Promise<unknown>};
+// Each operation's body validator, compiled on first use; the server's first answer no longer waits for all of them.
+const bodyChecks:(()=>ValidateFunction)[]=[];
 function validate(check:ValidateFunction,args:unknown):void {
  if (!check(args)) throw new UsageError(ajv.errorsText(check.errors,{separator:"; "}));
 }
@@ -62,9 +65,10 @@ export const ALL_TOOLS: ToolSpec[] = operations.map(op=>{
   const i=required.indexOf(key); if (i!==-1) required.splice(i,1);
  }
  const inputSchema:Json={type:"object",properties,required,additionalProperties:false};
- const bodyCheck=ajv.compile({...op.bodySchema,additionalProperties:false});
+ // Compiled on the first call, not at load. compileAll() runs every one in tests.
+ let bodyCompiled:ValidateFunction|undefined;const bodyCheck=()=>bodyCompiled??=ajv.compile({...op.bodySchema,additionalProperties:false});bodyChecks.push(bodyCheck);
  return {name:op.name,title:op.title,description:`${op.title}. ${op.name==="generate_image5"?"Image 5 supports natural-language edits through referenceBlobs. ":""}Consumes Firefly Services credits. Returns Adobe output URLs. Set wait=false to return an async job.`,inputSchema,risk:"spend" as const,handler:async(args,client)=>{
-  const body=normalize(args);validate(bodyCheck,body);semanticChecks(op.name,body);
+  const body=normalize(args);validate(bodyCheck(),body);semanticChecks(op.name,body);
   if (args.download===true && args.wait===false) throw new UsageError("download requires wait=true.");
   const result=await client.submit(op.path,body,op.headers,args.wait!==false);
   return args.download===true ? client.downloadOutputs(result) : result;
@@ -76,6 +80,9 @@ ALL_TOOLS.push(
  {name:"get_job_status",title:"Read an async job",description:"Read an existing Adobe async job by jobId. Use after a polling timeout instead of submitting generation again.",risk:"read",inputSchema:{type:"object",properties:{jobId:{type:"string",minLength:1,description:"Job ID or URN returned by Adobe."}},required:["jobId"],additionalProperties:false},handler:(args,client)=>client.getJobStatus(args.jobId)},
  {name:"list_custom_models",title:"List available custom models",description:"Read custom models available to the Adobe project. FIREFLY_USER_TOKEN is optional for user-specific access. Returns a page; use start and limit to continue.",risk:"read",inputSchema:{type:"object",properties:{sortBy:{type:"string",enum:["assetName","createdDate","modifiedDate","-assetName","-createdDate","-modifiedDate"]},start:{type:"integer",minimum:0},limit:{type:"integer",minimum:1,maximum:50},publishedState:{type:"string",enum:["all","ready","published","unpublished","queued","training","failed","cancelled"]}},additionalProperties:false},handler:(args,client)=>client.customModels(args)},
 );
-const checks=new Map(ALL_TOOLS.map(t=>[t.name,ajv.compile(t.inputSchema)]));
-export function validateArguments(tool:ToolSpec,args:Json):void {validate(checks.get(tool.name)!,args);}
+const checks=new Map<string,ValidateFunction>();
+function checkFor(tool:ToolSpec):ValidateFunction{let v=checks.get(tool.name);if(!v){v=ajv.compile(tool.inputSchema);checks.set(tool.name,v);}return v;}
+export function validateArguments(tool:ToolSpec,args:Json):void {validate(checkFor(tool),args);}
+/** Compile every input and body schema, as loading once did, so a test can prove they all compile. */
+export function compileAll():number{for(const t of ALL_TOOLS)checkFor(t);for(const body of bodyChecks)body();return checks.size+bodyChecks.length;}
 export function visibleTools(config:Config):ToolSpec[] {return ALL_TOOLS.filter(t=>!config.readOnly||t.risk==="read");}

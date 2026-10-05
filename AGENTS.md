@@ -2,7 +2,7 @@
 
 Read SKILL.md for usage and INSTALL.md for setup. Follow the shared MCP/CLI skill in the AI OS.
 
-The CLI is copied from the house bridge asset. It connects to the real server through the SDK in-memory transport. Keep schemas, handlers, annotations and safety in one registry.
+Slipway provides the CLI, the server and the guard; `src/app.ts` hands it the tools. Keep schemas, handlers, annotations and safety in one registry.
 
 The API request schemas come from Adobe's official OpenAPI snapshot. Run npm run sync:api deliberately, review the diff, then build and test. The migration article and current OpenAPI disagree about Image 5 fields: follow the actual operation's schema and examples, and record discrepancies in COMPARISON.md.
 

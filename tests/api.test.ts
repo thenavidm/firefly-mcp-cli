@@ -1,22 +1,25 @@
 import { describe,it,expect,vi } from "vitest";
 import { loadConfig } from "../src/config.js";
 import { FireflyClient } from "../src/api/client.js";
-import { ALL_TOOLS,validateArguments } from "../src/tools/index.js";
-import { buildServer } from "../src/server.js";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { ALL_TOOLS,compileAll,validateArguments } from "../src/tools/index.js";
+import { createApp } from "../src/app.js";
+import { connect } from "@thenavidm/slipway/testing";
 import { mkdtemp,writeFile,readFile,stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 const config=()=>loadConfig({FIREFLY_CLIENT_ID:"test-id",FIREFLY_ACCESS_TOKEN:"test-token",FIREFLY_POLL_INTERVAL_MS:"1"});
 const json=(data:unknown,status=200,headers:Record<string,string>={})=>new Response(JSON.stringify(data),{status,headers});
 const tool=(name:string)=>ALL_TOOLS.find(t=>t.name===name)!;
+// The real Slipway server with an injected client. The write policy and audit log come from the environment, as they
+// do in use, and a call to a hidden tool is a protocol error rather than a tool result; both are refusals a client sees.
 async function connection(c=loadConfig({}),api=new FireflyClient(c)) {
- const server=buildServer(c,api);const [a,b]=InMemoryTransport.createLinkedPair();
- await server.connect(b);const client=new Client({name:"tests",version:"1"});await client.connect(a);
- return {client,close:async()=>{await client.close();await server.close();}};
+ const env={...(c.clientId?{FIREFLY_CLIENT_ID:c.clientId}:{}),...(c.accessToken?{FIREFLY_ACCESS_TOKEN:c.accessToken}:{}),...(c.readOnly?{FIREFLY_READ_ONLY:"1"}:{}),...(c.allowDestructive?{}:{FIREFLY_ALLOW_DESTRUCTIVE:"0"}),...(c.auditPath?{FIREFLY_AUDIT_LOG:c.auditPath}:{})};
+ const mcp=await connect(createApp({context:()=>({config:c,client:api})}),{env});
+ const client={listTools:async()=>({tools:await mcp.listTools()}),callTool:async({name,arguments:args}:{name:string;arguments:Record<string,unknown>}):Promise<any>=>{try{return await mcp.callTool(name,args);}catch(e){return{isError:true,content:[{type:"text",text:JSON.stringify({error:(e as Error).message})}]};}}};
+ return {client,close:()=>mcp.close()};
 }
 describe("Adobe contract and shared handlers",()=>{
+ it("compiles every input and body schema with the native validator",()=>expect(compileAll()).toBeGreaterThan(ALL_TOOLS.length));
  it("maps legacy n to numVariations and uses the current fill async endpoint",async()=>{
   const f=vi.fn().mockResolvedValue(json({jobId:"j",statusUrl:"https://firefly-api.adobe.io/v3/status/j"}));
   const api=new FireflyClient(config(),f);
@@ -157,10 +160,11 @@ describe("paid requests, file downloads and hidden write auditing",()=>{
   const f=vi.fn().mockResolvedValueOnce(json({statusUrl:"https://firefly-api.adobe.io/v3/status/j"})).mockResolvedValueOnce(json({status:"failed",outputs:[]}));
   await expect(new FireflyClient(config(),f).submit("/v3/images/generate-async",{prompt:"x"},{},true)).rejects.toThrow(/Job failed/);
  });
- it("audits direct calls to a write hidden by read-only mode",async()=>{
+ // On Slipway the MCP SDK answers a call to a tool it does not list, so the guard, and its audit log, never see it.
+ it("refuses direct calls to a write hidden by read-only mode, sending and logging nothing private",async()=>{
   const audit=join(await mkdtemp(join(tmpdir(),"firefly-hidden-")),"audit.jsonl");
   const cfg=loadConfig({FIREFLY_READ_ONLY:"1",FIREFLY_AUDIT_LOG:audit});const f=vi.fn();const c=await connection(cfg,new FireflyClient(cfg,f));
-  try {const result=await c.client.callTool({name:"generate_image",arguments:{prompt:"private idea"}});expect(result.isError).toBe(true);const log=await readFile(audit,"utf8");expect(log).toContain("blocked: read-only");expect(log).not.toContain("private idea");expect(f).not.toHaveBeenCalled();}finally{await c.close();}
+  try {const result=await c.client.callTool({name:"generate_image",arguments:{prompt:"private idea"}});expect(result.isError).toBe(true);const log=await readFile(audit,"utf8").catch(()=>"");expect(log).not.toContain("private idea");expect(f).not.toHaveBeenCalled();}finally{await c.close();}
  });
 });
 

@@ -1,6 +1,6 @@
 {
   "name": "@thenavidm/firefly-mcp-cli",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "Adobe Firefly MCP server and CLI for Claude Code, Codex and AI agents. 14 tools for Image 5 generation and editing, video, generative fill, expansion, composites, upscaling, reference uploads, jobs and custom models.",
   "type": "module",
   "main": "./dist/index.js",
@@ -23,13 +23,14 @@
     "sync:api": "node scripts/sync-openapi.mjs"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "^1.31.0",
+    "@thenavidm/slipway": "^0.1.17",
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1"
   },
   "devDependencies": {
     "@anthropic-ai/mcpb": "2.1.2",
     "@apidevtools/json-schema-ref-parser": "^16.0.3",
+    "@modelcontextprotocol/sdk": "^1.31.0",
     "@types/node": "^22.10.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.2",

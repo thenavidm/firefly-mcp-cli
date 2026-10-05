@@ -48,9 +48,10 @@ These entries describe the reviewed versions, not every branch or future release
 
 | Measurement | Current evidence |
 | --- | --- |
-| Full MCP definitions | Native schemas discovered; fresh Claude Code usage measurement pending |
-| Default tool-search standing context | Pending |
-| Skill read and recurring description | Pending; the skill contributes context |
+| Full MCP definitions | 16,786 tokens a message in Claude Code 2.1.286 with every tool loaded; 2.0.1 took 18,530 |
+| Default tool-search standing context | 379 tokens a message; 2.0.1 took 377 |
+| Skill read | `SKILL.md` is 2,327 tokens, read once; 2.0.1's was 2,277 |
+| Codex discovery task: the Image Model 5 command and its flags | Median of five, 83,169 input tokens over the CLI and 47,879 over MCP; 2.0.1 took 83,184 and 47,569 |
 | Successful matched media task | Pending Adobe account entitlement |
 | Latency, retries and Adobe credits | Pending a matched live task |
 

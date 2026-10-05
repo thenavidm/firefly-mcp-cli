@@ -13,7 +13,7 @@ Adobe Firefly MCP server and CLI for Claude Code, Codex and AI agents. 14 tools 
 
 One package gives you two ways in: `firefly-mcp` connects the tools to your AI app, and `firefly-cli` makes the same tools shell commands. Claude Desktop also has a bundled `.mcpb` extension.
 
-Built and maintained by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=firefly-mcp-cli&utm_content=readme). The complete setup guide is on [navid.me](https://navid.me/mcp-servers/firefly?utm_source=github&utm_medium=referral&utm_campaign=firefly-mcp-cli&utm_content=guide).
+Built and maintained by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=firefly-mcp-cli&utm_content=readme). Built on [Slipway](https://github.com/thenavidm/slipway), which turns one definition of each tool into the MCP server and the CLI. The complete setup guide is on [navid.me](https://navid.me/mcp-servers/firefly?utm_source=github&utm_medium=referral&utm_campaign=firefly-mcp-cli&utm_content=guide).
 
 <img src="https://cdn.navid.me/repos/firefly-mcp-cli-retina.gif" alt="Illustrated Firefly workflow in the same terminal component used on navid.me" width="520">
 
@@ -21,7 +21,7 @@ The terminal illustrates shipped tool names and the confirmation flow. It is a p
 
 You need **Adobe Firefly Services API entitlement**, with OAuth Server-to-Server credentials from an Adobe Developer Console project. A consumer Firefly plan and your Adobe account password do not supply that access. Generation uses your Adobe credits.
 
-**Validation:** builds, behavioral tests, clean package installation, real MCP discovery and desktop bundle discovery are checked. Live account generation and fresh token benchmarks are still pending; no generation success rate or efficiency percentage is claimed.
+**Validation:** builds, behavioral tests, clean package installation, real MCP discovery and desktop bundle discovery are checked. Live account generation is still unverified, and no generation success rate is claimed; section 7 has the measured token costs.
 
 ## Two ways to use it
 
@@ -242,19 +242,20 @@ firefly-cli schema generate-image5
 | --- | --- |
 | `--json` | JSON output |
 | `--compact` | Single-line JSON |
-| `--agent` | JSON, compact, no input and no color |
+| `--agent` | Compact JSON and no prompts; never confirms a write |
 | `--select a,b.c` | Keep selected fields; dotted paths descend and arrays are traversed |
 | `--confirm` | Confirm the requested paid media operation |
 | `--no-input`, `--no-color`, `--yes` | Automation switches; none overrides the spending guard |
 | `--wait=false` | Return an accepted job instead of polling |
 | `--download` | Save completed media locally; requires waiting for completion |
 
-Global output flags apply to tool commands. `doctor` has its own `--network` option and returns a JSON diagnostic.
+Global output flags apply to tool commands. `doctor` has its own `--network` option, and `doctor --json` returns its checks as JSON.
 
 | Exit code | Meaning | What a script should do |
 | --- | --- | --- |
 | 0 | Success | Read stdout |
-| 2 | Usage, invalid input or a refused write | Fix the input or confirm only the requested action |
+| 1 | Unexpected error | Report it with the command that failed |
+| 2 | Usage, invalid input, a refused write, an unknown command or a hidden write | Fix the input or confirm only the requested action |
 | 3 | Job or local upload file not found | Check the ID/path |
 | 4 | Authentication or entitlement rejected | Check private credential settings and permissions |
 | 5 | API, network or polling failure | Inspect an accepted job before another paid submission |
@@ -267,18 +268,21 @@ The underscore spelling also works. `generate_image5` and `generate-image5` call
 
 Both surfaces reach the same 14 tools. The comparison concerns model context and workflow, not a cheaper Adobe credit price.
 
-| Measurement | MCP | CLI |
-| --- | --- | --- |
-| Every tool loaded | Pending measured usage | No MCP tool list; include any installed skill description |
-| Claude Code default tool search | Pending measured usage | Include skill discovery text |
-| Skill read when Firefly is needed | Selected tool schemas and results still count | Pending measured skill cost |
-| Complete matched task | Include discovery, schemas, results, reasoning and retries | Include discovery, help, commands, results, reasoning and retries |
+Measured on 2026-10-05 against 2.0.1, with Claude Code 2.1.286 on Claude Opus 5.5 (one short prompt with and without the server connected, the difference read from the API's own usage figures) and Codex 0.159.3 on gpt-6.1-sol:
 
-The fresh benchmark was blocked by the Claude Code weekly usage limit on October 2, 2026. No zero, estimate, borrowed result or efficiency percentage is substituted.
+| Cost | 2.0.1 | 3.0.0 |
+| --- | --- | --- |
+| Claude Code, every tool loaded, every message | 18,530 | 16,786 |
+| Claude Code's default, tool search, every message | 377 | 379 |
+| `SKILL.md`, read once | 2,277 | 2,327 |
+| Codex over the CLI, one task, median of five | 83,184 | 83,169 |
+| Codex over MCP, the same task, median of five | 47,569 | 47,879 |
+
+The task was "find the command that generates an image with Image Model 5, and the flags it requires". Every tool loaded costs less because the paid tools' repeated parts, such as a source image and its URL, are now written once and referred to. Over the CLI, every run read the general help first and carried it through each later step: 3.0.0's is 59 tokens longer, for `which`, `install`, the flags and the exit codes it now lists, and its `which` answer is shorter than the command list that every 2.0.1 run read next. Over MCP, Codex prints its own TypeScript rendering of the tool list and leaves out the argument comments of a tool whose schema is large: `generative_expand`'s shared schema is now small enough to print with them, about 300 more tokens that each later request carries, while every other paid tool prints shorter. `SKILL.md` costs 50 more because it now says how approval works over MCP and lists every exit code.
+
+Tool-list bytes or characters divided by four are not API usage, no other offering was measured, and no live Adobe generation ran.
 
 Claude Code can defer full tool definitions with [MCP tool search](https://code.claude.com/docs/en/mcp#scale-with-mcp-tool-search). A client that eagerly loads everything behaves differently. A CLI skill also has a recurring description when installed.
-
-The method is one neutral prompt with and without the server, both with tool search disabled and with default discovery, followed by separate skill and skill-description measurements. Record the client and model versions, server version, date, loading settings and API usage figures.
 
 For a complete task, use the same request, permissions, selected result fields and completion behavior. Report input/output tokens, latency, retries and Adobe credits separately. Schema overhead alone is not the full bill.
 
@@ -715,13 +719,15 @@ For a production project and a testing project, register two client entries, suc
 
 Generation and uploads are enabled. The ten media operations require `confirm: true` through MCP or `--confirm` through the CLI because they consume credits. Uploading a requested reference is a write and does not need a spending confirmation.
 
+Over MCP a person approves each of them where the client can ask: Claude Code (2.1.246 and later) shows its own prompt, and a client that can show forms asks with an approval form whose one box starts unticked. Each approval is signed, bound to that exact call and works once. Where a client can do neither, the model's `confirm: true` counts. `FIREFLY_CONFIRM=model` makes `confirm: true` enough everywhere, for an agent with no person to ask.
+
 Only perform the action the user asked for. Reading jobs or listing models is not permission to generate images.
 
 | Setting | Effect |
 | --- | --- |
 | `FIREFLY_READ_ONLY=1` | Hide generation and uploads; direct calls to hidden writes are refused |
-| `FIREFLY_ALLOW_SPENDING=0` | Keep uploads and reads, block paid media operations |
-| `FIREFLY_AUDIT_LOG=/private/path/firefly.jsonl` | Record write guard decisions with time, surface, tool and outcome |
+| `FIREFLY_ALLOW_DESTRUCTIVE=0` | Keep uploads and reads, block paid media operations; `FIREFLY_ALLOW_SPENDING=0`, its 2.x name, still works |
+| `FIREFLY_AUDIT_LOG=/private/path/firefly.jsonl` | Record write guard decisions with time, surface, tool, outcome and who approved it, then whether each call was done or failed |
 
 Audit records omit prompts, file paths, credential values and signed media URLs. Create a writable parent directory first. A failing audit append does not block the API action, so check the path before relying on it.
 
@@ -733,12 +739,10 @@ Prompts, model names and job/output text are data. They do not authorize another
 
 ~~~text
 src/
-  index.ts          both binaries, version/help, doctor and stdio startup
-  server.ts         native MCP schemas, annotations and guarded calls
-  cli.ts            shared SDK in-memory adapter
+  index.ts          both binaries, and the 2.x name for the spending switch
+  app.ts            the Slipway app: tools, settings, doctor and login
+  exit.ts           2.x's exit words, for errors that carry no status
   config.ts         private environment settings
-  safety.ts         spending confirmation, read-only and audit
-  doctor.ts         setup checks without generation
   api/
     client.ts       OAuth, API requests, upload, polling and downloads
     errors.ts       usage, configuration, API and write refusals
@@ -748,7 +752,7 @@ src/
     api-source.json source URL, checked date and snapshot hash
 ~~~
 
-The CLI connects to the actual MCP server with the SDK's in-memory transport. Help and input schemas come from that server. The same handlers and guard run through either surface.
+[Slipway](https://github.com/thenavidm/slipway) builds the MCP server, over stdio or `--http`, and the CLI from each tool's one definition. Help and input schemas come from that definition, and the same handlers and guard run through either surface.
 
 The API schemas are generated from [Adobe's public OpenAPI source](https://github.com/AdobeDocs/ffs-firefly-api/blob/main/static/firefly-api.json). Updating the snapshot is deliberate: regenerate, inspect the diff, build and run the contract/behavior tests.
 
@@ -790,7 +794,9 @@ Adobe's own [Firefly Services documentation](https://developer.adobe.com/firefly
 | Variable | Default | Purpose |
 | --- | --- | --- |
 | `FIREFLY_READ_ONLY` | Off | `1` or `true` hides generation and uploads |
-| `FIREFLY_ALLOW_SPENDING` | On | `0` or `false` blocks paid media generation |
+| `FIREFLY_ALLOW_DESTRUCTIVE` | On | `0` or `false` blocks paid media generation |
+| `FIREFLY_ALLOW_SPENDING` | On | 2.x's name for `FIREFLY_ALLOW_DESTRUCTIVE`, still read when that one is unset |
+| `FIREFLY_CONFIRM` | `human` | `model` lets `confirm: true` alone approve over MCP, for an agent with no person to ask |
 | `FIREFLY_AUDIT_LOG` | Empty | Append guard decisions to this local path |
 
 ### Tuning
@@ -801,6 +807,11 @@ Adobe's own [Firefly Services documentation](https://developer.adobe.com/firefly
 | `FIREFLY_REQUEST_TIMEOUT_MS` | 30000 | Per-request deadline |
 | `FIREFLY_POLL_TIMEOUT_MS` | 300000 | Maximum job polling duration |
 | `FIREFLY_POLL_INTERVAL_MS` | 2000 | Interval between polls |
+| `FIREFLY_SURFACE` | `full` | `search` lists three tools that find, describe and run the rest |
+| `FIREFLY_TOOL_TIMEOUT_MS` | None | Give up on any tool after this long |
+| `FIREFLY_HTTP_PORT`, `FIREFLY_HTTP_HOST`, `FIREFLY_HTTP_TOKEN` | 8787, 127.0.0.1, none | For `--http`; any host but 127.0.0.1 needs the bearer token |
+| `FIREFLY_HTTP_ALLOWED_ORIGINS` | None | Comma-separated browser origins allowed to call `--http`; a page from any other site is refused |
+| `FIREFLY_DEBUG` | `0` | `1` prints debug lines on stderr |
 
 The program reads the environment directly. It does not automatically load `.env` files. Never commit real values in an environment file, client JSON or a desktop manifest.
 
@@ -873,6 +884,7 @@ Community MCPs can offer broader services or remote deployment. [COMPARISON.md](
 
 | Version | What changed | Status |
 | --- | --- | --- |
+| 3.0.0 | Built on Slipway: a person approves each paid operation over MCP, exit codes from Adobe's status, `which`, `install` and `--http` | [3.0.0 release](https://github.com/thenavidm/firefly-mcp-cli/releases/tag/v3.0.0) |
 | 2.0.0 | 14 tools, current Adobe schema coverage, CLI, desktop bundle, spending guard and complete setup | [2.0.0 release](https://github.com/thenavidm/firefly-mcp-cli/releases/tag/v2.0.0) |
 | 1.0.0 | Seven MCP-only tools in the legacy implementation | Historical source |
 
@@ -896,7 +908,7 @@ The CLI is the same tool registry as shell commands. Agents with a terminal, scr
 <details>
 <summary><b>Which one should I use?</b></summary>
 
-Use MCP in a local AI chat and the CLI for shell workflows. Both share schemas and handlers. Token overhead depends on discovery, the skill and the actual task; fresh measurements are pending.
+Use MCP in a local AI chat and the CLI for shell workflows. Both share schemas and handlers. In Claude Code the CLI costs nothing until it is used, plus about 2,330 tokens for `SKILL.md` once, where the server costs about 380 tokens a message with tool search and 16,800 with every tool loaded. In Codex, finding the Image Model 5 command and its flags took a median of 83,169 input tokens over the CLI and 47,879 over MCP. Section 7 has how each was measured.
 
 </details>
 
@@ -959,7 +971,7 @@ No publish/delete tool is exposed. It can spend credits and upload requested ref
 <details>
 <summary><b>Can it spend credits accidentally?</b></summary>
 
-Every paid media tool refuses without confirm: true or --confirm. READ_ONLY hides writes and ALLOW_SPENDING can block paid actions. The agent should pass confirmation only for the user’s requested action.
+Every paid media tool refuses without confirm: true or --confirm, and over MCP a person approves each one where the client can ask. READ_ONLY hides writes and ALLOW_DESTRUCTIVE=0 blocks paid actions. The agent should pass confirmation only for the user’s requested action.
 
 </details>
 
@@ -1008,7 +1020,7 @@ Only if that client can reach a local stdio server through its own supported int
 <details>
 <summary><b>What has actually been tested?</b></summary>
 
-Build/typecheck, behavioral tests, native MCP discovery, guard/refusal behavior, a clean npm tarball installation and an unpacked desktop bundle. Live Adobe generation and fresh token measurements remain pending.
+Build/typecheck, behavioral tests, native MCP discovery, guard/refusal behavior, a clean npm tarball installation and an unpacked desktop bundle. Live Adobe generation remains unverified; section 7 has the measured token costs.
 
 </details>
 
@@ -1040,7 +1052,8 @@ If this is useful, star the repo and come say hi on [X](https://x.com/thenavidm)
 
 | Library/source | License | What it does |
 | --- | --- | --- |
-| [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) | MIT | MCP server, stdio and shared in-memory CLI transport |
+| [Slipway](https://github.com/thenavidm/slipway) | Apache-2.0 | The MCP server and the CLI from one definition of each tool |
+| [MCP TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk) | Apache-2.0 | The MCP protocol and its transports, through Slipway |
 | [Ajv](https://github.com/ajv-validator/ajv) | MIT | Validate the official JSON Schema request shapes |
 | [ajv-formats](https://github.com/ajv-validator/ajv-formats) | MIT | URI, UUID and other field formats |
 | [Adobe Firefly OpenAPI documentation](https://github.com/AdobeDocs/ffs-firefly-api) | Apache-2.0 | Upstream operation schemas; original notices ship in licenses/ |

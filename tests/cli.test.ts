@@ -1,101 +1,114 @@
 /**
- * The CLI bridge (src/cli.ts, copied from dev:mcp-cli assets/cli-bridge.ts).
+ * The CLI, now built by Slipway from the same tools as the MCP server.
  *
- * The bridge reads the real server's tools/list, so the tests that count are
- * the ones over that list: every tool routes, every schema turns into flags,
- * and every required key is a required flag. The rest cover the argv shapes a
- * person types and the exit-code contract.
+ * Parsing, help and output shapes are Slipway's and tested there. These cover
+ * what this repo promises: confirmation that agent mode never grants,
+ * read-only mode, the setup exit code, Adobe Firefly's errors keeping their exit
+ * codes, and the docs staying in step with the code.
  */
 
+import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { EXIT, exitCodeFor, flagsFor, isCliCommand, listTools, parseArgs } from "../src/cli.js";
+import { checkApp, cli } from "@thenavidm/slipway/testing";
+import { FireflyClient } from "../src/api/client.js";
+import { app, createApp } from "../src/app.js";
+import { loadConfig } from "../src/config.js";
 
-const schema = {
-  type: "object",
-  properties: {
-    text: { type: "string", description: "The body." },
-    limit: { type: "integer" },
-    confirm: { type: "boolean" },
-    tags: { type: "array", items: { type: "string" } },
-    filter: { type: "object" },
-    mode: { type: "string", enum: ["fast", "slow"] },
-    maybe: { anyOf: [{ type: "number" }, { type: "null" }] },
-  },
-  required: ["text"],
-};
+const key = { FIREFLY_CLIENT_ID: "fixture-client", FIREFLY_ACCESS_TOKEN: "fixture-token-not-a-provider-secret" };
 
-describe("flags from the JSON Schema an MCP app receives", () => {
-  const flags = flagsFor(schema);
-  const by = (key: string) => flags.find((f) => f.key === key);
+/** The app with Adobe Firefly answering every request with `status` and `body`, so nothing leaves the test. */
+function answering(status: number, body: unknown = { message: "failure", error: "failure" }) {
+  return createApp({
+    context: (env) => {
+      const config = loadConfig({ ...env, FIREFLY_POLL_INTERVAL_MS: "1" });
+      const fetcher = async () => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+      return { config, client: new FireflyClient(config, fetcher as typeof fetch) };
+    },
+  });
+}
 
-  it("kebab-cases each key and carries its description", () => {
-    expect(by("text")).toMatchObject({ flag: "--text", kind: "string", required: true, help: "The body." });
+describe("Adobe Firefly CLI on Slipway", () => {
+  it("lists 14 commands, 10 of them needing confirmation, and 3 in read-only mode", async () => {
+    const all = JSON.parse((await cli(app, ["agent-context", "--brief"], { env: {} })).stdout);
+    const reads = JSON.parse((await cli(app, ["agent-context", "--brief"], { env: { FIREFLY_READ_ONLY: "1" } })).stdout);
+    expect(all.commands).toHaveLength(14);
+    expect(all.commands.filter((c: { requires_confirm: boolean }) => c.requires_confirm)).toHaveLength(10);
+    expect(reads.commands).toHaveLength(3);
   });
 
-  it("reads the kind of every property", () => {
-    expect(by("limit")?.kind).toBe("integer");
-    expect(by("confirm")?.kind).toBe("boolean");
-    expect(by("tags")).toMatchObject({ kind: "string", repeatable: true });
-    expect(by("filter")?.kind).toBe("json");
-    expect(by("mode")).toMatchObject({ kind: "enum", choices: ["fast", "slow"] });
-    expect(by("maybe")?.kind).toBe("number");
-  });
-});
-
-describe("parseArgs", () => {
-  const flags = flagsFor(schema);
-
-  it("accepts --flag value, --flag=value and the underscore spelling", () => {
-    expect(parseArgs(["--text", "hi"], flags)).toEqual({ text: "hi" });
-    expect(parseArgs(["--text=hi"], flags)).toEqual({ text: "hi" });
-    expect(parseArgs(["--text", "hi", "--mode", "fast"], flags)).toEqual({ text: "hi", mode: "fast" });
-  });
-
-  it("treats a boolean as a switch and collects a repeatable flag", () => {
-    expect(parseArgs(["--text", "hi", "--confirm", "--tags", "a", "--tags", "b"], flags)).toEqual({ text: "hi", confirm: true, tags: ["a", "b"] });
-  });
-
-  it("fills the first required flag from a bare argument", () => {
-    expect(parseArgs(["hello"], flags)).toEqual({ text: "hello" });
-  });
-
-  it("refuses what it cannot use", () => {
-    expect(() => parseArgs(["--nope", "x"], flags)).toThrow(/Unknown option/);
-    expect(() => parseArgs(["--text", "hi", "--limit", "1.5"], flags)).toThrow(/whole number/);
-    expect(() => parseArgs(["--text", "hi", "--mode", "medium"], flags)).toThrow(/one of/);
-    expect(() => parseArgs(["--text", "hi", "--filter", "{oops"], flags)).toThrow(/JSON/);
-    expect(() => parseArgs([], flags)).toThrow(/Missing --text/);
-  });
-});
-
-describe("exit codes follow the house contract", () => {
-  it("maps the generic words", () => {
-    expect(exitCodeFor("MCP error -32602: Input validation error: Invalid arguments")).toBe(EXIT.usage);
-    expect(exitCodeFor("Not deleting. Call again with confirm: true once you are sure.")).toBe(EXIT.usage);
-    expect(exitCodeFor("Too many requests, slow down (429)")).toBe(EXIT.rateLimited);
-    expect(exitCodeFor("Nothing is configured. Run `login` first.")).toBe(EXIT.config);
-    expect(exitCodeFor("Request had invalid authentication credentials (401)")).toBe(EXIT.auth);
-    expect(exitCodeFor("That resource was not found (404)")).toBe(EXIT.notFound);
-    expect(exitCodeFor("Upstream answered 502")).toBe(EXIT.api);
-  });
-});
-
-describe("parity with the real server", () => {
-  it("routes every tool in both spellings, and builds flags for every schema", async () => {
-    const tools = await listTools();
-    expect(tools.length).toBeGreaterThan(0);
-    const names = tools.map((t) => t.name);
-    for (const tool of tools) {
-      expect(isCliCommand([tool.name], names)).toBe(true);
-      expect(isCliCommand([tool.name.replace(/_/g, "-")], names)).toBe(true);
-      const flags = flagsFor(tool.inputSchema);
-      expect(flags).toHaveLength(Object.keys(tool.inputSchema.properties ?? {}).length);
-      for (const key of tool.inputSchema.required ?? []) expect(flags.find((f) => f.key === key)?.required).toBe(true);
+  it("refuses a write without --confirm, also in agent mode, before any network", async () => {
+    for (const extra of [[], ["--agent"], ["--yes"]]) {
+      const run = await cli(answering(200), ["generate-image", "--prompt", "a lighthouse at dusk", ...extra], { env: key });
+      expect(run.code).toBe(2);
+      expect(JSON.parse(run.stderr).code).toBe("refused");
     }
   });
 
-  it("leaves the server's own flags alone", () => {
-    expect(isCliCommand(["--http"], ["x"])).toBe(false);
-    expect(isCliCommand([], ["x"])).toBe(false);
+  it("hides writes in read-only mode", async () => {
+    const run = await cli(app, ["generate-image", "--prompt", "a lighthouse at dusk", "--confirm"], { env: { ...key, FIREFLY_READ_ONLY: "1" } });
+    expect(run.code).toBe(2);
+    expect(run.stderr).toContain("FIREFLY_READ_ONLY");
+  });
+
+  it("reports a missing argument by its flag", async () => {
+    const run = await cli(app, ["get-job-status"], { env: key });
+    expect(run.code).toBe(2);
+    expect(JSON.parse(run.stderr).error).toContain("--jobId");
+  });
+
+  it("exits 10 when nothing is configured, on a call and from doctor", async () => {
+    expect((await cli(app, ["get-job-status", "--jobId", "fixture-job"], { env: {} })).code).toBe(10);
+    expect((await cli(app, ["doctor", "--json"], { env: {} })).code).toBe(10);
+  });
+
+  it("keeps the exit codes scripts branch on", async () => {
+    // 2.x gave 5 for 400, 410 and 422; Adobe's status now picks 2, 3 and 2.
+    for (const [status, code] of [[400, 2], [401, 4], [402, 5], [403, 4], [404, 3], [409, 5], [410, 3], [422, 2], [429, 7], [500, 5]]) {
+      const run = await cli(answering(status), ["get-job-status", "--jobId", "fixture-job"], { env: key });
+      expect(run.code, `HTTP ${status}`).toBe(code);
+    }
+  });
+
+  it("passes slipway check in both policy modes", async () => {
+    for (const env of [{}, { FIREFLY_READ_ONLY: "1" }]) {
+      const report = await checkApp(app, { env });
+      expect(report.findings.filter((finding) => finding.level === "error")).toEqual([]);
+    }
+  });
+});
+
+describe("documentation stays in step with the code", () => {
+  const read = (p: string): string => readFileSync(new URL(p, import.meta.url), "utf-8");
+  const names = (text: string): Set<string> => new Set((text.match(/FIREFLY_[A-Z_]+/g) ?? []).filter((name) => !name.endsWith("_")));
+  const source = (dir: string): string =>
+    readdirSync(new URL(dir, import.meta.url), { withFileTypes: true })
+      .map((entry) => (entry.isDirectory() ? source(`${dir}${entry.name}/`) : entry.name.endsWith(".ts") ? read(`${dir}${entry.name}`) : ""))
+      .join("\n");
+
+  /** Every variable the server reads: this repo's code, and Slipway's as agent-context lists them. */
+  const used = async (): Promise<Set<string>> => {
+    const context = JSON.parse((await cli(app, ["agent-context"], { env: {} })).stdout);
+    return new Set([...names(source("../src/")), ...context.settings.map((setting: { env: string }) => setting.env)]);
+  };
+
+  it("documents every environment variable the code reads", async () => {
+    const documented = names(read("../README.md"));
+    expect([...(await used())].filter((v) => !documented.has(v))).toEqual([]);
+  });
+
+  it.each(["../README.md", "../INSTALL.md"])("has no dead in-page anchors in %s", (file) => {
+    if (!existsSync(new URL(file, import.meta.url))) return; // repo may ship one doc
+    const md = read(file).replace(/```[\s\S]*?```/g, "");
+    // GitHub's slug keeps letters, marks, numbers and connector punctuation, so an
+    // emoji's variation selector (U+FE0F) stays in the anchor and a link has to carry it.
+    const slugs = new Set(
+      [...md.matchAll(/^#{1,6} (.+)$/gm)].map(([, heading]) =>
+        (heading as string).trim().toLowerCase().replace(/[^\p{L}\p{M}\p{N}\p{Pc}\s-]/gu, "").replace(/ /g, "-"),
+      ),
+    );
+    const dead = [...md.matchAll(/\[[^\]]+\]\(#([^)]+)\)/g)]
+      .map((m) => decodeURIComponent(m[1] as string))
+      .filter((a) => !slugs.has(a));
+    expect(dead).toEqual([]);
   });
 });

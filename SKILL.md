@@ -44,7 +44,8 @@ Use --wait=false to return the job immediately. Poll get-job-status with its job
 | Exit | Meaning |
 | --- | --- |
 | 0 | Success |
-| 2 | Usage, invalid input or read-only refusal |
+| 1 | Unexpected error |
+| 2 | Usage, invalid input, a refused or hidden write, or an unknown command |
 | 3 | Resource or upload file not found |
 | 4 | Authentication or entitlement rejected |
 | 5 | API or polling failure |
@@ -53,7 +54,7 @@ Use --wait=false to return the job immediately. Poll get-job-status with its job
 
 ## Boundaries
 
-Perform only the operations the user requested. There are no publish or delete tools; generation and uploads are enabled by default. Generation requires --confirm because spending credits cannot be undone. FIREFLY_READ_ONLY=1 hides them. --agent and --yes do not override that setting. Existing signed output URLs may grant access to private media; keep them out of public content unless the user asks to publish them. Audit logs omit prompts and credentials.
+Perform only the operations the user requested. There are no publish or delete tools; generation and uploads are enabled by default. Generation requires --confirm because spending credits cannot be undone; over MCP the person approves each in the client's own prompt or form, and confirm:true counts only where the client cannot ask. FIREFLY_READ_ONLY=1 hides them. --agent and --yes do not override that setting. Existing signed output URLs may grant access to private media; keep them out of public content unless the user asks to publish them. Audit logs omit prompts and credentials.
 
 Image 5 accepts one variation per request in the reviewed schema. With a reference image, omit aspectRatio or use auto. For older image operations, n is an alias for numVariations and width/height can replace size. Use both width and height together. Generative fill uses image and mask source objects. A local path refers to the machine running the server, including when Claude Desktop launches it.
 
@@ -83,4 +84,4 @@ Get the returned jobId or statusUrl when using --wait=false. Resume get-job-stat
 
 ## Choosing a surface
 
-MCP exposes all schemas at connection time. CLI commands load discovery and selected schemas on demand, with the skill and shell results contributing to the model's context. --agent and --select reduce text overhead. Do not promise zero tokens or a measured savings percentage unless the specific benchmark has completed. Adobe credit usage is identical for the same API operation through either surface.
+MCP exposes all schemas at connection time. CLI commands load discovery and selected schemas on demand, with the skill and shell results contributing to the model's context. --agent and --select reduce text overhead. Measured costs are in README section 7; do not promise zero tokens. Adobe credit usage is identical for the same API operation through either surface.
